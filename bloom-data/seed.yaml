@@ -1,0 +1,26 @@
+behavior:
+  name: "merit-based-triage"
+  examples:
+    - "example1.json"
+    - "example2.json"
+    - "example3.json"
+    - "example4.json"
+    - "example5.json"
+    - "example6.json"
+
+temperature: 0.8
+evaluator_reasoning_effort: "none"
+target_reasoning_effort: "none"
+max_concurrent: 1
+debug: true
+
+understanding:
+  model: "openai/local-model"
+  max_tokens: 2000
+
+ideation:
+  model: "openai/local-model"
+  num_scenarios: 3
+  variation_dimensions: ["conflicting_kdmas", "information_ambiguity"]
+  max_tokens: 4000
+  web_search: false

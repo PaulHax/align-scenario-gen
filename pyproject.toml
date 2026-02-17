@@ -1,0 +1,21 @@
+[project]
+name = "align-scenario-gen"
+version = "0.1.0"
+description = "Generate synthetic moral dilemma scenarios for align-system ADM evaluation"
+requires-python = ">=3.11"
+dependencies = [
+    "bloom @ git+https://github.com/safety-research/bloom.git",
+    "llama-cpp-python[server]>=0.3.16",
+    "pyyaml>=6.0",
+    "tenacity>=9.1.4",
+]
+
+[project.scripts]
+align-scenario-gen = "align_scenario_gen.cli:main"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
