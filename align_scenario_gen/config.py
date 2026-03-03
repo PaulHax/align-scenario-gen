@@ -2,16 +2,23 @@ from pathlib import Path
 
 import yaml
 
-DEFAULTS = {
-    "model": "claude-sonnet-4",
-    "scenario_id": "generated",
-    "temperature": 1.0,
-    "max_tokens": 4000,
-    "output": "output/scenarios.json",
-}
-
 
 def load_config(path: str | Path) -> dict:
     with open(path) as f:
-        user = yaml.safe_load(f) or {}
-    return {**DEFAULTS, **user}
+        config = yaml.safe_load(f) or {}
+
+    name = config["behavior"]["name"]
+    config.setdefault("scenario_id", "generated")
+    config.setdefault("temperature", 0.8)
+    config.setdefault("max_tokens", 4000)
+    config.setdefault("output", "output/scenarios.json")
+
+    config["_derived"] = {
+        "examples_dir": f"bloom-data/behaviors/examples/{name}",
+        "bloom_results_dir": f"bloom-results/{name}",
+        "ideation_file": f"bloom-results/{name}/ideation.json",
+        "seed_file": "bloom-data/seed.yaml",
+        "config_dir": "bloom-data",
+    }
+
+    return config

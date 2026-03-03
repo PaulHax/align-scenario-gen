@@ -1,0 +1,26 @@
+behavior:
+  name: "merit-based-triage"
+  choices:
+    - "Patient A"
+    - "Patient B"
+
+examples_source:
+  experiments_dir: /home/paulhax/src/itm/experiments
+  pattern: "phase2_feb2026_results_local/phase2_baseline/Feb2026-MF-*"
+  max_examples: 6
+
+local_model:
+  repo_id: bartowski/Meta-Llama-3.1-8B-Instruct-GGUF
+  filename: "*Q4_K_M.gguf"
+  # n_gpu_layers: -1  # number of layers to offload to GPU (-1 = all, 0 = none)
+  # main_gpu: 0       # which GPU to use (matches nvidia-smi index)
+
+temperature: 0.8
+max_tokens: 4000
+
+ideation:
+  num_scenarios: 3
+  variation_dimensions: ["conflicting_kdmas", "information_ambiguity"]
+
+scenario_id: generated-merit
+output: output/scenarios.json

@@ -11,6 +11,10 @@ behavior:
     - "example5.json"
     - "example6.json"
 
+local_model:
+  repo_id: bartowski/Meta-Llama-3.1-8B-Instruct-GGUF
+  filename: "*Q4_K_M.gguf"
+
 temperature: 0.8
 evaluator_reasoning_effort: "none"
 target_reasoning_effort: "none"

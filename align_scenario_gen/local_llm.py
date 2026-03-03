@@ -20,13 +20,12 @@ def get_model(local_cfg: dict) -> Llama:
 
 
 def local_chat(
-    config: dict,
+    local_cfg: dict,
     messages: list[dict],
     system_prompt: str | None = None,
     max_tokens: int = 4000,
     temperature: float = 1.0,
 ) -> str:
-    local_cfg = config.get("local_model", {})
     model = get_model(local_cfg)
 
     all_messages = []

@@ -2,33 +2,9 @@ import json
 from pathlib import Path
 
 from .convert import scenario_to_record
+from .local_llm import local_chat
 from .parse import parse_scenario_json
 from .prompt import SYSTEM_PROMPT, build_user_prompt
-
-
-def _call_llm(config: dict, messages: list[dict]) -> str:
-    if config["model"] == "local":
-        from .local_llm import local_chat
-
-        return local_chat(
-            config,
-            messages,
-            system_prompt=SYSTEM_PROMPT,
-            max_tokens=config["max_tokens"],
-            temperature=config["temperature"],
-        )
-
-    from bloom.utils import get_model_id, litellm_chat, parse_message
-
-    model_id = get_model_id(config["model"])
-    response = litellm_chat(
-        model_id=model_id,
-        messages=messages,
-        system_prompt=SYSTEM_PROMPT,
-        max_tokens=config["max_tokens"],
-        temperature=config["temperature"],
-    )
-    return parse_message(response)["content"]
 
 
 def _load_ideation(path: str | Path) -> list[dict]:
@@ -36,16 +12,10 @@ def _load_ideation(path: str | Path) -> list[dict]:
     return data["variations"]
 
 
-def _load_seed_choices(path: str | Path) -> list[str]:
-    import yaml
-
-    data = yaml.safe_load(Path(path).read_text())
-    return data["behavior"]["choices"]
-
-
-def _generate_from_ideation(config: dict) -> list[dict]:
-    variations = _load_ideation(config["ideation_file"])
-    choices = _load_seed_choices(config["seed_file"])
+def run_generate(config: dict) -> list[dict]:
+    variations = _load_ideation(config["_derived"]["ideation_file"])
+    choices = config["behavior"]["choices"]
+    local_model = config["local_model"]
     scenario_id = config["scenario_id"]
     max_retries = 3
     records = []
@@ -57,7 +27,13 @@ def _generate_from_ideation(config: dict) -> list[dict]:
         messages = [{"role": "user", "content": user_prompt}]
 
         for attempt in range(max_retries):
-            content = _call_llm(config, messages)
+            content = local_chat(
+                local_model,
+                messages,
+                system_prompt=SYSTEM_PROMPT,
+                max_tokens=config["max_tokens"],
+                temperature=config["temperature"],
+            )
             try:
                 scenario = parse_scenario_json(content)
                 break
@@ -69,12 +45,6 @@ def _generate_from_ideation(config: dict) -> list[dict]:
 
         scenario["choices"] = [{"label": c} for c in choices]
         records.append(scenario_to_record(scenario, scenario_id, i))
-
-    return records
-
-
-def run(config: dict) -> list[dict]:
-    records = _generate_from_ideation(config)
 
     output_path = Path(config["output"])
     output_path.parent.mkdir(parents=True, exist_ok=True)

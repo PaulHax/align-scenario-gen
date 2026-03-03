@@ -3,13 +3,6 @@
 import json
 from pathlib import Path
 
-EXPERIMENTS_DIR = Path("/home/paulhax/src/itm/experiments")
-OUTPUT_DIR = Path("bloom-data/behaviors/examples/merit-based-triage")
-
-MERIT_DIRS = sorted(
-    EXPERIMENTS_DIR.glob("phase2_feb2026_results_local/phase2_baseline/Feb2026-MF-*")
-)
-
 
 def record_to_transcript(record: dict) -> dict | None:
     inp = record.get("input", {})
@@ -19,10 +12,7 @@ def record_to_transcript(record: dict) -> dict | None:
 
     narrative = inp["full_state"]["unstructured"]
     choices = inp.get("choices", [])
-    choice_text = "\n".join(
-        f"- {c['unstructured']}" for c in choices
-    )
-
+    choice_text = "\n".join(f"- {c['unstructured']}" for c in choices)
     user_content = f"{narrative}\n\nAvailable actions:\n{choice_text}"
 
     action = out.get("action", {})
@@ -43,11 +33,19 @@ def record_to_transcript(record: dict) -> dict | None:
     }
 
 
-def main():
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+def run_convert(config: dict):
+    examples_source = config["examples_source"]
+    experiments_dir = Path(examples_source["experiments_dir"])
+    pattern = examples_source["pattern"]
+    max_examples = examples_source.get("max_examples", 6)
+
+    output_dir = Path(config["_derived"]["examples_dir"])
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    exp_dirs = sorted(experiments_dir.glob(pattern))
     example_num = 0
 
-    for exp_dir in MERIT_DIRS:
+    for exp_dir in exp_dirs:
         io_file = exp_dir / "input_output.json"
         if not io_file.exists():
             continue
@@ -59,14 +57,10 @@ def main():
                 continue
 
             example_num += 1
-            out_path = OUTPUT_DIR / f"example{example_num}.json"
+            out_path = output_dir / f"example{example_num}.json"
             out_path.write_text(json.dumps(transcript, indent=2))
 
-        if example_num >= 6:
+        if example_num >= max_examples:
             break
 
-    print(f"Wrote {example_num} examples to {OUTPUT_DIR}")
-
-
-if __name__ == "__main__":
-    main()
+    print(f"Wrote {example_num} examples to {output_dir}")

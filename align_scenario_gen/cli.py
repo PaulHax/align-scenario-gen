@@ -1,7 +1,6 @@
 import argparse
 
 from .config import load_config
-from .generate import run
 
 
 def main():
@@ -9,14 +8,28 @@ def main():
         description="Generate decision scenarios from bloom ideation output"
     )
     parser.add_argument("config", help="Path to YAML config file")
-    parser.add_argument("--model", type=str)
-    parser.add_argument("--output", type=str)
+    parser.add_argument(
+        "--step",
+        choices=["convert", "bloom", "generate"],
+        help="Run a single pipeline step (default: run all)",
+    )
     args = parser.parse_args()
 
     config = load_config(args.config)
-    for key in ("model", "output"):
-        val = getattr(args, key)
-        if val is not None:
-            config[key] = val
 
-    run(config)
+    steps = [args.step] if args.step else ["convert", "bloom", "generate"]
+
+    if "convert" in steps:
+        from .convert_examples import run_convert
+
+        run_convert(config)
+
+    if "bloom" in steps:
+        from .bloom_runner import run_bloom
+
+        run_bloom(config)
+
+    if "generate" in steps:
+        from .generate import run_generate
+
+        run_generate(config)
